@@ -1,4 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "npm:@supabase/supabase-js@2.57.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -34,6 +35,19 @@ Deno.serve(async (req: Request) => {
     const encodedText = encodeURIComponent(text);
     const qrDataUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodedText}`;
 
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+    if (supabaseUrl && supabaseKey) {
+      const supabase = createClient(supabaseUrl, supabaseKey);
+
+      await supabase.from("qr_history").insert([
+        {
+          text: text,
+        },
+      ]);
+    }
+
     return new Response(
       JSON.stringify({ qr: qrDataUrl }),
       {
@@ -41,6 +55,7 @@ Deno.serve(async (req: Request) => {
       }
     );
   } catch (error) {
+    console.error("Error:", error);
     return new Response(
       JSON.stringify({ error: "Failed to generate QR code" }),
       {
