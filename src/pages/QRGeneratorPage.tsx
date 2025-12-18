@@ -22,27 +22,18 @@ export default function QRGeneratorPage({ onBack }: QRGeneratorPageProps) {
     setQrImage(null);
 
     try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-      const response = await fetch(
-        `${supabaseUrl}/functions/v1/qr-generator`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${anonKey}`,
-          },
-          body: JSON.stringify({ text: inputText }),
-        }
-      );
-
+      // Generate QR code directly using free QR code API
+      const encodedText = encodeURIComponent(inputText.trim());
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodedText}`;
+      
+      // Verify the QR code URL is accessible
+      const response = await fetch(qrUrl, { method: 'HEAD' });
+      
       if (!response.ok) {
         throw new Error('Failed to generate QR code');
       }
-
-      const data = await response.json();
-      setQrImage(data.qr);
+      
+      setQrImage(qrUrl);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate QR code');
     } finally {
@@ -66,25 +57,25 @@ export default function QRGeneratorPage({ onBack }: QRGeneratorPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900/20 to-orange-900/20">
+    <div className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto px-4 py-8">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 text-gray-400 hover:text-gray-200 mb-8 transition-colors"
+          className="flex items-center gap-2 text-text-secondary hover:text-text-primary mb-8 transition-colors"
         >
-          <ArrowLeft className="w-5 h-5" />
-          Back
+          <ArrowLeft className="w-4 h-4" />
+          <span className="text-sm">Back to Dashboard</span>
         </button>
 
-        <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/50 rounded-xl p-8">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-orange-400 bg-clip-text text-transparent mb-2">
+        <div className="bg-surface border border-border rounded-lg p-6">
+          <h1 className="text-xl font-semibold text-text-primary mb-1">
             QR Code Generator
           </h1>
-          <p className="text-gray-400 mb-8">
+          <p className="text-sm text-text-secondary mb-6">
             Generate QR codes from text or URLs instantly
           </p>
 
-          <div className="space-y-4 mb-8">
+          <div className="space-y-4 mb-6">
             <input
               type="text"
               value={inputText}
@@ -93,17 +84,17 @@ export default function QRGeneratorPage({ onBack }: QRGeneratorPageProps) {
                 setError('');
               }}
               placeholder="Enter text or URL..."
-              className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full bg-background border border-border rounded-md px-4 py-2.5 text-text-primary placeholder-text-secondary text-sm focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent transition-colors"
             />
 
             <button
               onClick={generateQR}
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-purple-500 to-orange-500 hover:from-purple-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg transition-all flex items-center justify-center gap-2"
+              className="w-full bg-accent hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-2.5 rounded-md transition-colors flex items-center justify-center gap-2 text-sm"
             >
               {isLoading ? (
                 <>
-                  <Loader className="w-5 h-5 animate-spin" />
+                  <Loader className="w-4 h-4 animate-spin" />
                   Generating...
                 </>
               ) : (
@@ -111,17 +102,23 @@ export default function QRGeneratorPage({ onBack }: QRGeneratorPageProps) {
               )}
             </button>
 
-            {error && <p className="text-red-400 text-sm">{error}</p>}
+            {error && (
+              <p className="text-red-400 text-sm bg-red-400/10 border border-red-400/20 rounded-md px-3 py-2">
+                {error}
+              </p>
+            )}
           </div>
 
           {qrImage && (
-            <div className="bg-gray-700/20 rounded-lg p-8 flex flex-col items-center gap-6">
-              <img src={qrImage} alt="Generated QR Code" className="w-64 h-64" />
+            <div className="bg-background border border-border rounded-md p-6 flex flex-col items-center gap-4">
+              <div className="bg-white p-3 rounded-md">
+                <img src={qrImage} alt="Generated QR Code" className="w-48 h-48" />
+              </div>
               <button
                 onClick={downloadQR}
-                className="flex items-center gap-2 bg-gray-700/50 hover:bg-gray-600/50 text-gray-200 px-6 py-2 rounded-lg transition-colors"
+                className="flex items-center gap-2 border border-border hover:bg-surface-hover text-text-primary px-4 py-2 rounded-md transition-colors text-sm"
               >
-                <Download className="w-5 h-5" />
+                <Download className="w-4 h-4" />
                 Download QR Code
               </button>
             </div>

@@ -15,30 +15,31 @@ export default function ToolCard({ tool, onClick }: ToolCardProps) {
   return (
     <div
       onClick={onClick}
-      className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/50 rounded-xl p-6 hover:border-purple-500/50 hover:shadow-lg hover:shadow-purple-500/10 transition-all cursor-pointer group">
+      className="bg-surface border border-border rounded-lg p-5 hover:border-border-hover hover:bg-surface-hover transition-all cursor-pointer group"
+    >
       <div className="flex items-start justify-between mb-4">
-        <div className="p-3 bg-gradient-to-br from-purple-500/10 to-orange-500/10 rounded-lg group-hover:from-purple-500/20 group-hover:to-orange-500/20 transition-colors">
-          {IconComponent && <IconComponent className="w-6 h-6 text-purple-400" />}
+        <div className="p-2.5 bg-accent/10 rounded-md">
+          {IconComponent && <IconComponent className="w-5 h-5 text-accent" />}
         </div>
         <button
           onClick={(e) => {
             e.stopPropagation();
             setIsFavorite(!isFavorite);
           }}
-          className="p-1 hover:bg-gray-700/50 rounded transition-colors"
+          className="p-1 hover:bg-background rounded transition-colors"
         >
           <Star
-            className={`w-5 h-5 ${
-              isFavorite ? 'fill-orange-400 text-orange-400' : 'text-gray-500'
+            className={`w-4 h-4 ${
+              isFavorite ? 'fill-amber-400 text-amber-400' : 'text-text-secondary'
             }`}
           />
         </button>
       </div>
 
-      <h3 className="text-lg font-semibold text-gray-100 mb-2">{tool.name}</h3>
-      <p className="text-sm text-gray-400 mb-4">{tool.description}</p>
+      <h3 className="text-base font-medium text-text-primary mb-1.5">{tool.name}</h3>
+      <p className="text-sm text-text-secondary mb-4 leading-relaxed">{tool.description}</p>
 
-      <span className="inline-block px-3 py-1 bg-gray-700/50 text-gray-300 text-xs rounded-full">
+      <span className="inline-block px-2.5 py-1 bg-background text-text-secondary text-xs rounded-md border border-border">
         {tool.category}
       </span>
     </div>
