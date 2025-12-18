@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ArrowLeft, Download, Loader } from 'lucide-react';
+import QRCode from 'qrcode';
 
 interface QRGeneratorPageProps {
   onBack: () => void;
@@ -7,8 +8,9 @@ interface QRGeneratorPageProps {
 
 export default function QRGeneratorPage({ onBack }: QRGeneratorPageProps) {
   const [inputText, setInputText] = useState('');
-  const [qrImage, setQrImage] = useState<string | null>(null);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [error, setError] = useState('');
 
   const generateQR = async () => {
@@ -19,21 +21,19 @@ export default function QRGeneratorPage({ onBack }: QRGeneratorPageProps) {
 
     setIsLoading(true);
     setError('');
-    setQrImage(null);
+    setQrDataUrl(null);
 
     try {
-      // Generate QR code directly using free QR code API
-      const encodedText = encodeURIComponent(inputText.trim());
-      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodedText}`;
-      
-      // Verify the QR code URL is accessible
-      const response = await fetch(qrUrl, { method: 'HEAD' });
-      
-      if (!response.ok) {
-        throw new Error('Failed to generate QR code');
-      }
-      
-      setQrImage(qrUrl);
+      // Generate QR code as data URL (base64 PNG) - 100% client-side
+      const dataUrl = await QRCode.toDataURL(inputText.trim(), {
+        width: 300,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF',
+        },
+      });
+      setQrDataUrl(dataUrl);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate QR code');
     } finally {
@@ -41,19 +41,20 @@ export default function QRGeneratorPage({ onBack }: QRGeneratorPageProps) {
     }
   };
 
-  const downloadQR = async () => {
-    if (!qrImage) return;
+  const downloadQR = () => {
+    if (!qrDataUrl) return;
 
-    try {
-      const link = document.createElement('a');
-      link.href = qrImage;
-      link.download = 'qrcode.png';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (err) {
-      setError('Failed to download QR code');
-    }
+    setIsDownloading(true);
+    
+    // Direct download from base64 data URL - no CORS issues
+    const link = document.createElement('a');
+    link.href = qrDataUrl;
+    link.download = 'qr-code.png';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    setIsDownloading(false);
   };
 
   return (
@@ -109,17 +110,27 @@ export default function QRGeneratorPage({ onBack }: QRGeneratorPageProps) {
             )}
           </div>
 
-          {qrImage && (
+          {qrDataUrl && (
             <div className="bg-background border border-border rounded-md p-6 flex flex-col items-center gap-4">
               <div className="bg-white p-3 rounded-md">
-                <img src={qrImage} alt="Generated QR Code" className="w-48 h-48" />
+                <img src={qrDataUrl} alt="Generated QR Code" className="w-48 h-48" />
               </div>
               <button
                 onClick={downloadQR}
-                className="flex items-center gap-2 border border-border hover:bg-surface-hover text-text-primary px-4 py-2 rounded-md transition-colors text-sm"
+                disabled={isDownloading}
+                className="flex items-center gap-2 border border-border hover:bg-surface-hover disabled:opacity-50 text-text-primary px-4 py-2 rounded-md transition-colors text-sm"
               >
-                <Download className="w-4 h-4" />
-                Download QR Code
+                {isDownloading ? (
+                  <>
+                    <Loader className="w-4 h-4 animate-spin" />
+                    Downloading...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4" />
+                    Download QR Code
+                  </>
+                )}
               </button>
             </div>
           )}
