@@ -5,14 +5,17 @@ import { useState } from 'react';
 
 interface ToolCardProps {
   tool: Tool;
+  onClick?: () => void;
 }
 
-export default function ToolCard({ tool }: ToolCardProps) {
+export default function ToolCard({ tool, onClick }: ToolCardProps) {
   const [isFavorite, setIsFavorite] = useState(false);
   const IconComponent = Icons[tool.icon as keyof typeof Icons] as React.ComponentType<{ className?: string }>;
 
   return (
-    <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/50 rounded-xl p-6 hover:border-purple-500/50 hover:shadow-lg hover:shadow-purple-500/10 transition-all cursor-pointer group">
+    <div
+      onClick={onClick}
+      className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/50 rounded-xl p-6 hover:border-purple-500/50 hover:shadow-lg hover:shadow-purple-500/10 transition-all cursor-pointer group">
       <div className="flex items-start justify-between mb-4">
         <div className="p-3 bg-gradient-to-br from-purple-500/10 to-orange-500/10 rounded-lg group-hover:from-purple-500/20 group-hover:to-orange-500/20 transition-colors">
           {IconComponent && <IconComponent className="w-6 h-6 text-purple-400" />}
