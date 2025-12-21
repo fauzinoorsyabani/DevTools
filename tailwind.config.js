@@ -1,19 +1,20 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
       colors: {
-        // Professional dark theme
-        background: '#0B0F14',
-        surface: '#111827',
-        'surface-hover': '#1a2332',
-        border: '#1F2937',
-        'border-hover': '#374151',
-        'text-primary': '#E5E7EB',
-        'text-secondary': '#9CA3AF',
-        accent: '#3B82F6',
-        'accent-hover': '#2563EB',
+        // Theme colors using CSS variables
+        background: 'var(--color-background)',
+        surface: 'var(--color-surface)',
+        'surface-hover': 'var(--color-surface-hover)',
+        border: 'var(--color-border)',
+        'border-hover': 'var(--color-border-hover)',
+        'text-primary': 'var(--color-text-primary)',
+        'text-secondary': 'var(--color-text-secondary)',
+        accent: 'var(--color-accent)',
+        'accent-hover': 'var(--color-accent-hover)',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],

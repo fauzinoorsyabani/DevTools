@@ -46,13 +46,33 @@ export default function QRGeneratorPage({ onBack }: QRGeneratorPageProps) {
 
     setIsDownloading(true);
     
-    // Direct download from base64 data URL - no CORS issues
-    const link = document.createElement('a');
-    link.href = qrDataUrl;
-    link.download = 'qr-code.png';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      // Convert base64 data URL to Blob for proper download
+      const byteString = atob(qrDataUrl.split(',')[1]);
+      const mimeType = qrDataUrl.split(',')[0].split(':')[1].split(';')[0];
+      const ab = new ArrayBuffer(byteString.length);
+      const ia = new Uint8Array(ab);
+      
+      for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+      }
+      
+      const blob = new Blob([ab], { type: mimeType });
+      const blobUrl = URL.createObjectURL(blob);
+      
+      // Create download link with blob URL
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = 'qr-code.png';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Cleanup
+      URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error('Download failed:', err);
+    }
     
     setIsDownloading(false);
   };

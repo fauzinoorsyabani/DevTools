@@ -1,4 +1,5 @@
-import { Search, Settings } from 'lucide-react';
+import { Search, Sun, Moon } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 interface NavbarProps {
   searchQuery: string;
@@ -6,6 +7,8 @@ interface NavbarProps {
 }
 
 export default function Navbar({ searchQuery, onSearchChange }: NavbarProps) {
+  const { theme, toggleTheme } = useTheme();
+
   return (
     <nav className="bg-surface border-b border-border sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -29,11 +32,20 @@ export default function Navbar({ searchQuery, onSearchChange }: NavbarProps) {
             </div>
           </div>
 
-          <button className="p-2 rounded-md border border-border hover:bg-surface-hover hover:border-border-hover transition-colors">
-            <Settings className="w-4 h-4 text-text-secondary" />
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-md border border-border hover:bg-surface-hover hover:border-border-hover transition-colors"
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {theme === 'dark' ? (
+              <Sun className="w-4 h-4 text-text-secondary" />
+            ) : (
+              <Moon className="w-4 h-4 text-text-secondary" />
+            )}
           </button>
         </div>
       </div>
     </nav>
   );
 }
+
