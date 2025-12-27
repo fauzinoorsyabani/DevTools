@@ -5,6 +5,13 @@ import CategoryTabs from './components/CategoryTabs';
 import ToolCard from './components/ToolCard';
 import { tools, categories } from './data/tools';
 import QRGeneratorPage from './pages/QRGeneratorPage';
+import ColorContrastCheckerPage from './pages/ColorContrastCheckerPage';
+import JWTDecoderPage from './pages/JWTDecoderPage';
+import UrlEncoderPage from './pages/UrlEncoderPage';
+import CronCalculatorPage from './pages/CronCalculatorPage';
+import Base64EncoderPage from './pages/Base64EncoderPage';
+import JSONFormatterPage from './pages/JSONFormatterPage';
+import UUIDGeneratorPage from './pages/UUIDGeneratorPage';
 
 function App() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -26,6 +33,62 @@ function App() {
     return (
       <ThemeProvider>
         <QRGeneratorPage onBack={() => setActiveTool(null)} />
+      </ThemeProvider>
+    );
+  }
+
+  if (activeTool === 'color-contrast') {
+    return (
+      <ThemeProvider>
+        <ColorContrastCheckerPage onBack={() => setActiveTool(null)} />
+      </ThemeProvider>
+    );
+  }
+
+  if (activeTool === 'jwt-decoder') {
+    return (
+      <ThemeProvider>
+        <JWTDecoderPage onBack={() => setActiveTool(null)} />
+      </ThemeProvider>
+    );
+  }
+
+  if (activeTool === 'url-encoder') {
+    return (
+      <ThemeProvider>
+        <UrlEncoderPage onBack={() => setActiveTool(null)} />
+      </ThemeProvider>
+    );
+  }
+
+  if (activeTool === 'cron-calculator') {
+    return (
+      <ThemeProvider>
+        <CronCalculatorPage onBack={() => setActiveTool(null)} />
+      </ThemeProvider>
+    );
+  }
+
+  if (activeTool === 'base64-encoder') {
+    return (
+      <ThemeProvider>
+        <Base64EncoderPage onBack={() => setActiveTool(null)} />
+      </ThemeProvider>
+    );
+  }
+
+  if (activeTool === 'json-formatter') {
+    return (
+      <ThemeProvider>
+        <JSONFormatterPage onBack={() => setActiveTool(null)} />
+      </ThemeProvider>
+    );
+  }
+
+  if (activeTool === 'uuid-generator') {
+    return (
+      <ThemeProvider>
+        <UUIDGeneratorPage onBack={() => setActiveTool(null)} />
       </ThemeProvider>
     );
   }
