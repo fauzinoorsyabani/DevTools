@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Clock, AlertCircle, Calendar } from 'lucide-react';
+import { ArrowLeft, Clock, AlertCircle, Calendar, HelpCircle } from 'lucide-react';
 import cronstrue from 'cronstrue';
 import parser from 'cron-parser';
+import ExplainModePanel from '../components/ExplainModePanel';
+import InfoPanel from '../components/InfoPanel';
 
 interface CronCalculatorPageProps {
   onBack: () => void;
@@ -16,17 +18,33 @@ const PRESETS = [
   { label: 'Monthly', value: '0 0 1 * *' },
 ];
 
+const CRON_FIELDS = [
+  { name: 'Minute', range: '0-59', position: 1 },
+  { name: 'Hour', range: '0-23', position: 2 },
+  { name: 'Day of Month', range: '1-31', position: 3 },
+  { name: 'Month', range: '1-12', position: 4 },
+  { name: 'Day of Week', range: '0-6', position: 5 },
+];
+
+const TOOL_METADATA = {
+  usedBy: ['Backend', 'DevOps', 'CI/CD'],
+  securityNote: 'Ensure cron jobs run with minimal privileges. Avoid storing secrets in cron commands.',
+  productionTip: 'Use descriptive comments in crontab. Monitor job execution with logging.',
+};
+
 export default function CronCalculatorPage({ onBack }: CronCalculatorPageProps) {
   const [expression, setExpression] = useState('*/5 * * * *');
   const [description, setDescription] = useState('');
   const [nextRuns, setNextRuns] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [errorHint, setErrorHint] = useState<string | null>(null);
 
   useEffect(() => {
     if (!expression.trim()) {
       setDescription('');
       setNextRuns([]);
       setError(null);
+      setErrorHint(null);
       return;
     }
 
@@ -43,8 +61,23 @@ export default function CronCalculatorPage({ onBack }: CronCalculatorPageProps) 
       }
       setNextRuns(runs);
       setError(null);
+      setErrorHint(null);
     } catch (err) {
-      setError('Invalid cron expression');
+      // Enhanced error messages with hints
+      const parts = expression.trim().split(/\s+/);
+      if (parts.length === 6) {
+        setError('Invalid cron expression');
+        setErrorHint('You have 6 fields. Standard cron uses 5 fields (min hour day month weekday). Some systems like Quartz use 6 fields (with seconds). Try removing the first field.');
+      } else if (parts.length < 5) {
+        setError('Incomplete cron expression');
+        setErrorHint(`Expected 5 fields but found ${parts.length}. Format: minute hour day-of-month month day-of-week`);
+      } else if (parts.length > 6) {
+        setError('Too many fields');
+        setErrorHint(`Expected 5 fields but found ${parts.length}. Standard format: minute hour day-of-month month day-of-week`);
+      } else {
+        setError('Invalid cron expression');
+        setErrorHint('Check each field value. Use * for any, */n for every n, or specific values separated by commas.');
+      }
       setDescription('');
       setNextRuns([]);
     }
@@ -65,10 +98,46 @@ export default function CronCalculatorPage({ onBack }: CronCalculatorPageProps) 
           {/* Main Calculator */}
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-surface border border-border rounded-lg p-6">
-              <h1 className="text-xl font-semibold mb-6 flex items-center gap-2">
-                <Clock className="w-5 h-5 text-accent" />
-                Cron Calculator
-              </h1>
+              <div className="flex items-start justify-between mb-4">
+                <h1 className="text-xl font-semibold flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-accent" />
+                  Cron Calculator
+                </h1>
+                <div className="relative">
+                  <InfoPanel metadata={TOOL_METADATA} />
+                </div>
+              </div>
+
+              {/* Explain Mode */}
+              <div className="mb-6">
+                <ExplainModePanel title="How does cron work? Learn the syntax">
+                  <div className="space-y-3">
+                    <p>
+                      <strong className="text-text-primary">Cron</strong> is a time-based job scheduler in Unix-like systems. It uses expressions to define when tasks should run.
+                    </p>
+                    <div>
+                      <strong className="text-text-primary">Standard Format (5 fields):</strong>
+                      <div className="mt-2 font-mono text-xs bg-background/50 p-3 rounded border border-border/50 overflow-x-auto">
+                        <span className="text-green-400">┌───────────── minute (0-59)</span><br/>
+                        <span className="text-green-400">│ ┌────────── hour (0-23)</span><br/>
+                        <span className="text-green-400">│ │ ┌─────── day of month (1-31)</span><br/>
+                        <span className="text-green-400">│ │ │ ┌──── month (1-12)</span><br/>
+                        <span className="text-green-400">│ │ │ │ ┌── day of week (0-6, Sun=0)</span><br/>
+                        <span className="text-text-primary">* * * * *</span>
+                      </div>
+                    </div>
+                    <div>
+                      <strong className="text-text-primary">Special Characters:</strong>
+                      <ul className="list-disc list-inside mt-1 space-y-1 text-xs">
+                        <li><code className="text-accent">*</code> - any value</li>
+                        <li><code className="text-accent">*/n</code> - every n units</li>
+                        <li><code className="text-accent">a-b</code> - range from a to b</li>
+                        <li><code className="text-accent">a,b,c</code> - specific values</li>
+                      </ul>
+                    </div>
+                  </div>
+                </ExplainModePanel>
+              </div>
 
               <div className="space-y-4">
                 <div>
@@ -84,10 +153,33 @@ export default function CronCalculatorPage({ onBack }: CronCalculatorPageProps) 
                   />
                 </div>
 
+                {/* Field Reference */}
+                <div className="flex flex-wrap gap-2">
+                  {CRON_FIELDS.map((field, index) => (
+                    <div
+                      key={field.name}
+                      className="group relative"
+                    >
+                      <span className="text-xs bg-surface-hover px-2 py-1 rounded border border-border/50 text-text-secondary cursor-help flex items-center gap-1">
+                        {index + 1}. {field.name}
+                        <HelpCircle className="w-3 h-3" />
+                      </span>
+                      <div className="absolute bottom-full left-0 mb-1 hidden group-hover:block bg-surface border border-border px-2 py-1 rounded text-xs whitespace-nowrap shadow-lg z-10">
+                        Range: {field.range}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
                 {error ? (
-                  <div className="flex items-center gap-2 text-red-500 text-sm bg-red-500/10 border border-red-500/20 p-3 rounded-md">
-                    <AlertCircle className="w-4 h-4" />
-                    {error}
+                  <div className="bg-red-500/10 border border-red-500/20 p-3 rounded-md space-y-1">
+                    <div className="flex items-center gap-2 text-red-500 text-sm">
+                      <AlertCircle className="w-4 h-4" />
+                      <span className="font-medium">{error}</span>
+                    </div>
+                    {errorHint && (
+                      <p className="text-red-400/80 text-xs pl-6">{errorHint}</p>
+                    )}
                   </div>
                 ) : description ? (
                   <div className="bg-accent/10 border border-accent/20 p-4 rounded-md">

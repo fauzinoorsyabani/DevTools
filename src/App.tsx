@@ -104,6 +104,18 @@ function App() {
         />
 
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Hero Section */}
+          <div className="text-center mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold text-text-primary mb-3">
+              A Developer-Centric Toolbox Built with{' '}
+              <span className="bg-gradient-to-r from-accent to-purple-500 bg-clip-text text-transparent">
+                Product Thinking
+              </span>
+            </h2>
+            <p className="text-text-secondary text-sm md:text-base max-w-2xl mx-auto">
+              Not just utilities — but explanations, best practices, and real-world context.
+            </p>
+          </div>
           {filteredTools.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-gray-400 text-lg">No tools found</p>

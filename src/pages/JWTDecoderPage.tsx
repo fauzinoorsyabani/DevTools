@@ -1,23 +1,70 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Copy, AlertCircle, Check } from 'lucide-react';
+import { ArrowLeft, Copy, AlertCircle, Check, Code, ChevronDown } from 'lucide-react';
 import { jwtDecode } from 'jwt-decode';
+import ExplainModePanel from '../components/ExplainModePanel';
+import InfoPanel from '../components/InfoPanel';
 
 interface JWTDecoderPageProps {
   onBack: () => void;
 }
+
+const EXAMPLE_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
+
+const TOOL_METADATA = {
+  usedBy: ['Frontend', 'Backend', 'DevOps'],
+  securityNote: 'Never share JWTs containing sensitive data. This tool runs client-side only.',
+  productionTip: 'Always validate tokens server-side. Never trust client-decoded tokens for authorization.',
+};
+
+type CodeFormat = 'javascript' | 'python' | 'curl';
+
+const generateCodeSnippet = (token: string, format: CodeFormat): string => {
+  switch (format) {
+    case 'javascript':
+      return `// Using jsonwebtoken library
+const jwt = require('jsonwebtoken');
+
+const token = '${token}';
+const decoded = jwt.decode(token);
+
+console.log('Header:', jwt.decode(token, { complete: true })?.header);
+console.log('Payload:', decoded);`;
+
+    case 'python':
+      return `# Using PyJWT library
+import jwt
+
+token = '${token}'
+decoded = jwt.decode(token, options={"verify_signature": False})
+
+print("Payload:", decoded)`;
+
+    case 'curl':
+      return `# Using the token in API requests
+curl -X GET "https://api.example.com/protected" \\
+  -H "Authorization: Bearer ${token}" \\
+  -H "Content-Type: application/json"`;
+
+    default:
+      return '';
+  }
+};
 
 export default function JWTDecoderPage({ onBack }: JWTDecoderPageProps) {
   const [token, setToken] = useState('');
   const [header, setHeader] = useState<object | null>(null);
   const [payload, setPayload] = useState<object | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [errorHint, setErrorHint] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [showCodeDropdown, setShowCodeDropdown] = useState(false);
 
   useEffect(() => {
     if (!token.trim()) {
       setHeader(null);
       setPayload(null);
       setError(null);
+      setErrorHint(null);
       return;
     }
 
@@ -28,8 +75,17 @@ export default function JWTDecoderPage({ onBack }: JWTDecoderPageProps) {
       setPayload(decodedPayload as object);
       setHeader(decodedHeader as object);
       setError(null);
+      setErrorHint(null);
     } catch (err) {
-      setError('Invalid JWT Token format');
+      // Enhanced error messages with hints
+      const parts = token.split('.');
+      if (parts.length !== 3) {
+        setError('Invalid JWT format');
+        setErrorHint(`JWT should have 3 parts separated by dots (header.payload.signature). Your input has ${parts.length} part${parts.length !== 1 ? 's' : ''}.`);
+      } else {
+        setError('Invalid JWT Token');
+        setErrorHint('The token appears malformed. Check if the Base64 encoding is correct.');
+      }
       setHeader(null);
       setPayload(null);
     }
@@ -39,6 +95,18 @@ export default function JWTDecoderPage({ onBack }: JWTDecoderPageProps) {
     navigator.clipboard.writeText(text);
     setCopied(type);
     setTimeout(() => setCopied(null), 2000);
+  };
+
+  const copyAsCode = (format: CodeFormat) => {
+    const snippet = generateCodeSnippet(token, format);
+    navigator.clipboard.writeText(snippet);
+    setCopied(`code-${format}`);
+    setShowCodeDropdown(false);
+    setTimeout(() => setCopied(null), 2000);
+  };
+
+  const useExample = () => {
+    setToken(EXAMPLE_TOKEN);
   };
 
   const JSONDisplay = ({ data, title }: { data: object; title: string }) => (
@@ -83,17 +151,61 @@ export default function JWTDecoderPage({ onBack }: JWTDecoderPageProps) {
 
         <div className="space-y-6">
           <div className="bg-surface border border-border rounded-lg p-6">
-            <h1 className="text-xl font-semibold text-text-primary mb-1">
-              JWT Decoder
-            </h1>
-            <p className="text-sm text-text-secondary mb-6">
-              Decode and inspect JSON Web Tokens securely (client-side only)
-            </p>
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h1 className="text-xl font-semibold text-text-primary mb-1">
+                  JWT Decoder
+                </h1>
+                <p className="text-sm text-text-secondary">
+                  Decode and inspect JSON Web Tokens securely (client-side only)
+                </p>
+              </div>
+              <div className="relative">
+                <InfoPanel metadata={TOOL_METADATA} />
+              </div>
+            </div>
+
+            {/* Explain Mode */}
+            <div className="mb-6">
+              <ExplainModePanel title="What is JWT? Learn the basics">
+                <div className="space-y-3">
+                  <p>
+                    <strong className="text-text-primary">JSON Web Token (JWT)</strong> is a compact, URL-safe way of representing claims between two parties.
+                  </p>
+                  <div>
+                    <strong className="text-text-primary">Structure:</strong>
+                    <ul className="list-disc list-inside mt-1 space-y-1">
+                      <li><span className="text-red-400 font-mono">Header</span> - Algorithm & token type</li>
+                      <li><span className="text-purple-400 font-mono">Payload</span> - Claims (user data, expiry, etc.)</li>
+                      <li><span className="text-blue-400 font-mono">Signature</span> - Verifies token integrity</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <strong className="text-text-primary">Common Use Cases:</strong>
+                    <ul className="list-disc list-inside mt-1 space-y-1">
+                      <li>Authentication & Authorization</li>
+                      <li>API access tokens</li>
+                      <li>Single Sign-On (SSO)</li>
+                    </ul>
+                  </div>
+                </div>
+              </ExplainModePanel>
+            </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-text-primary">
-                Encoded Token
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-text-primary">
+                  Encoded Token
+                </label>
+                {!token && (
+                  <button
+                    onClick={useExample}
+                    className="text-xs text-accent hover:text-accent-hover transition-colors"
+                  >
+                    Use example token
+                  </button>
+                )}
+              </div>
               <textarea
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
@@ -101,10 +213,25 @@ export default function JWTDecoderPage({ onBack }: JWTDecoderPageProps) {
                 className="w-full h-32 bg-background border border-border rounded-md p-4 text-text-primary font-mono text-xs focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent transition-colors resize-y"
                 spellCheck={false}
               />
+              
+              {/* Empty state hint */}
+              {!token && (
+                <div className="flex items-center gap-2 text-text-secondary text-xs bg-surface-hover/50 p-3 rounded-md border border-border/50">
+                  <span>💡</span>
+                  <span>Tip: Paste a JWT token or <button onClick={useExample} className="text-accent hover:underline">try an example</button> to see how it works.</span>
+                </div>
+              )}
+
+              {/* Enhanced error with hint */}
               {error && (
-                <div className="flex items-center gap-2 text-red-500 text-sm mt-2">
-                  <AlertCircle className="w-4 h-4" />
-                  <span>{error}</span>
+                <div className="bg-red-500/10 border border-red-500/20 p-3 rounded-md space-y-1">
+                  <div className="flex items-center gap-2 text-red-500 text-sm">
+                    <AlertCircle className="w-4 h-4" />
+                    <span className="font-medium">{error}</span>
+                  </div>
+                  {errorHint && (
+                    <p className="text-red-400/80 text-xs pl-6">{errorHint}</p>
+                  )}
                 </div>
               )}
             </div>
@@ -146,6 +273,46 @@ export default function JWTDecoderPage({ onBack }: JWTDecoderPageProps) {
                       </div>
                     )}
                   </dl>
+                </div>
+
+                {/* Copy as Code Snippet */}
+                <div className="bg-surface border border-border rounded-lg p-6">
+                  <h3 className="font-medium text-text-primary mb-4 flex items-center gap-2">
+                    <Code className="w-4 h-4" />
+                    Copy as Code
+                  </h3>
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowCodeDropdown(!showCodeDropdown)}
+                      className="w-full flex items-center justify-between px-4 py-2.5 bg-background border border-border rounded-md text-sm text-text-primary hover:bg-surface-hover transition-colors"
+                    >
+                      <span>Select format...</span>
+                      <ChevronDown className={`w-4 h-4 transition-transform ${showCodeDropdown ? 'rotate-180' : ''}`} />
+                    </button>
+                    
+                    {showCodeDropdown && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-surface border border-border rounded-md shadow-lg overflow-hidden z-10">
+                        {(['javascript', 'python', 'curl'] as CodeFormat[]).map((format) => (
+                          <button
+                            key={format}
+                            onClick={() => copyAsCode(format)}
+                            className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-text-primary hover:bg-surface-hover transition-colors border-b border-border/50 last:border-0"
+                          >
+                            <span className="capitalize">{format}</span>
+                            {copied === `code-${format}` && (
+                              <span className="text-green-500 text-xs flex items-center gap-1">
+                                <Check className="w-3 h-3" />
+                                Copied!
+                              </span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-text-secondary mt-2">
+                    Copy the token usage in your preferred language
+                  </p>
                 </div>
               </div>
             </div>
