@@ -7,6 +7,20 @@ A modern, feature-rich collection of developer utilities built with React, TypeS
 ![Vite](https://img.shields.io/badge/Vite-5.4-purple?style=flat-square&logo=vite)
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-teal?style=flat-square&logo=tailwindcss)
 
+## 📸 Screenshots
+
+### Homepage
+
+![Homepage](./screenshots/homepage.png)
+
+### QR Code Generator
+
+![QR Code Generator](./screenshots/qr-generator.png)
+
+### JSON Formatter
+
+![JSON Formatter](./screenshots/json-formatter.png)
+
 ## ✨ Features
 
 ### 🔧 Available Tools
