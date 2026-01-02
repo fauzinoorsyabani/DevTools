@@ -2,10 +2,17 @@
 
 A modern, feature-rich collection of developer utilities built with React, TypeScript, and Vite. Fast, beautiful, and completely free to use.
 
+## 🌐 Live Demo
+
+**🚀 [Try it now → devtools-d9z.pages.dev](https://devtools-d9z.pages.dev/)**
+
+---
+
 ![DevTools Preview](https://img.shields.io/badge/React-18.3-blue?style=flat-square&logo=react)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.5-blue?style=flat-square&logo=typescript)
 ![Vite](https://img.shields.io/badge/Vite-5.4-purple?style=flat-square&logo=vite)
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-teal?style=flat-square&logo=tailwindcss)
+![Cloudflare Pages](https://img.shields.io/badge/Deployed%20on-Cloudflare%20Pages-orange?style=flat-square&logo=cloudflare)
 
 ## 📸 Screenshots
 
